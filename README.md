@@ -1,5 +1,22 @@
 # OpenSEO
 
+## راه‌اندازی این فورک (satardavoodi/open-seo) / Running this fork
+
+**فارسی:** این فورک همان کد رسمی [every-app/open-seo](https://github.com/every-app/open-seo) است. برای اجرا:
+
+1. Node.js **22.6+** و `corepack enable` → `pnpm install --frozen-lockfile`
+2. `cp .env.example .env.local` — `AUTH_MODE=local_noauth` (بدون احراز هویت محلی)
+3. `pnpm run db:migrate:local` (یک‌بار)
+4. `pnpm dev` → UI روی `http://localhost:3001` (بدون `DATAFORSEO_API_KEY` هم بالا می‌آید؛ فقط دادهٔ SEO غیرفعال است)
+5. **اختیاری:** `DATAFORSEO_API_KEY` = base64 از `login:password` — ر.ک. [`docs/DATAFORSEO_API_KEY.md`](./docs/DATAFORSEO_API_KEY.md)
+6. **اختیاری:** `OPENROUTER_API_KEY` برای عامل هوش مصنوعی SAM
+7. **Docker:** [`docs/SELF_HOSTING_DOCKER.md`](./docs/SELF_HOSTING_DOCKER.md) — `AUTH_MODE=local_noauth`، پورت پیش‌فرض `3001`
+8. **Cloudflare (پیشنهادی برای production):** [`docs/SELF_HOSTING_CLOUDFLARE.md`](./docs/SELF_HOSTING_CLOUDFLARE.md)
+
+**English:** Same upstream codebase. Quick local start: steps 1–4 above. SEO data needs `DATAFORSEO_API_KEY` (base64 of `login:password`). AI agent (SAM) needs optional `OPENROUTER_API_KEY`. Behind a tunnel or reverse proxy, set `ALLOWED_HOST` to the public hostname. Do not commit secrets.
+
+---
+
 > Open source alternative to Semrush and Ahrefs
 
 OpenSEO is an SEO tool for _the people_. If tools like Semrush or Ahrefs are too expensive or bloated, OpenSEO is a pay-as-you-go alternative that you actually control.
