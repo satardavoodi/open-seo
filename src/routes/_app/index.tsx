@@ -15,6 +15,9 @@ import { UnauthenticatedErrorCard } from "@/client/components/UnauthenticatedErr
 import { SUBSCRIBE_ROUTE } from "@/shared/billing";
 
 export const Route = createFileRoute("/_app/")({
+  // Redirects with useNavigate and loads projects client-side; SSR here can hit
+  // invalid hook calls before RouterProvider is ready (React #321).
+  ssr: false,
   component: IndexRedirect,
 });
 
