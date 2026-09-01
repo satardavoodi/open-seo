@@ -6,7 +6,7 @@ import {
   getIsoCountryCode,
   getKeywordDataProvider,
   getLanguageCode,
-  getProjectLanguageOptions,
+  getLanguageOptions,
   isLabsLocationCode,
   isSupportedLanguageCode,
   isSupportedLocationCode,
@@ -73,15 +73,9 @@ describe("keyword locations", () => {
     expect(getKeywordDataProvider(2364)).toBe("google_ads");
   });
 
-  it("offers Persian and common languages for Iran in the project picker", () => {
-    const codes = getProjectLanguageOptions(2364).map(
-      (language) => language.code,
-    );
-    expect(codes).toContain("fa");
-    expect(codes).toContain("en");
-    expect(codes).toContain("es");
-    expect(codes).toContain("ar");
-    expect(codes).toContain("tr");
+  it("offers Persian and English for Iran in the project picker", () => {
+    const codes = getLanguageOptions(2364).map((language) => language.code);
+    expect(new Set(codes)).toEqual(new Set(["fa", "en"]));
   });
 
   it("keeps the picker sorted alphabetically with unique codes", () => {

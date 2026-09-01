@@ -1,7 +1,7 @@
 import { LocationSelect } from "@/client/components/LocationSelect";
 import {
   getLanguageCode,
-  getProjectLanguageOptions,
+  getLanguageOptions,
 } from "@/client/features/keywords/locations";
 import type { ProjectMarket } from "@/client/features/projects/types";
 
@@ -20,7 +20,7 @@ export function ProjectMarketFields({
   onChange: (market: ProjectMarket) => void;
   hideLanguageOnMobile?: boolean;
 }) {
-  const languageOptions = getProjectLanguageOptions(value.locationCode);
+  const languageOptions = getLanguageOptions(value.locationCode);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
