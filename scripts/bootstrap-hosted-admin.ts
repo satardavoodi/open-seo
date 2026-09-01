@@ -10,9 +10,10 @@ import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { account, member, organization, user } from "../src/db/better-auth-schema";
-import {
-  SHARED_WORKSPACE_ORGANIZATION_ID,
-} from "../src/server/auth/delegated-organization";
+
+// Inline the org id: importing delegated-organization pulls AuthRepository →
+// @/db → cloudflare:workers, which tsx cannot load outside Workers.
+const SHARED_WORKSPACE_ORGANIZATION_ID = "shared-workspace";
 
 const schema = { user, organization, member, account };
 
