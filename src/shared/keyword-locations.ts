@@ -216,6 +216,13 @@ export const LOCATION_OPTIONS: readonly LocationOption[] = [
   { code: 2356, label: "India", shortLabel: "IN", languageCode: "en" },
   { code: 2360, label: "Indonesia", shortLabel: "ID", languageCode: "id" },
   {
+    code: 2364,
+    label: "Iran",
+    shortLabel: "IR",
+    languageCode: "fa",
+    googleAdsOnly: true,
+  },
+  {
     code: 2368,
     label: "Iraq",
     shortLabel: "IQ",
@@ -574,7 +581,7 @@ export const SERP_LANGUAGE_OPTIONS = [
   { code: "et", label: "Estonian" },
   { code: "ee", label: "Ewe" },
   { code: "fo", label: "Faroese" },
-  { code: "fa", label: "Farsi" },
+  { code: "fa", label: "Persian (Farsi)" },
   { code: "fil", label: "Filipino" },
   { code: "fi", label: "Finnish" },
   { code: "fr", label: "French" },
@@ -792,6 +799,7 @@ const MULTI_LANGUAGE_LOCATIONS: Record<number, readonly string[]> = {
   2344: ["en", "zh-TW"], // Hong Kong
   2356: ["en", "hi"], // India
   2360: ["en", "id"], // Indonesia
+  2364: ["fa", "en", "es", "ar", "tr"], // Iran
   2376: ["ar", "he"], // Israel
   2458: ["en", "ms"], // Malaysia
   2504: ["ar", "fr"], // Morocco
@@ -818,6 +826,38 @@ export function getLanguageOptions(
     MULTI_LANGUAGE_LOCATIONS[locationCode] ?? [getLanguageCode(locationCode)],
   );
   return SERP_LANGUAGE_OPTIONS.filter((language) => codes.has(language.code));
+}
+
+/** Common languages always shown in the project market picker. */
+export const COMMON_PROJECT_LANGUAGE_CODES = [
+  "fa",
+  "en",
+  "es",
+  "ar",
+  "tr",
+] as const;
+
+/**
+ * Project settings language picker: per-country options plus common languages
+ * (Persian, English, Spanish, Arabic, Turkish) so markets like Iran are easy
+ * to configure without a single-language dead end.
+ */
+export function getProjectLanguageOptions(
+  locationCode: number,
+): readonly (typeof SERP_LANGUAGE_OPTIONS)[number][] {
+  const perCountry = getLanguageOptions(locationCode);
+  const codes = new Set<string>([
+    ...perCountry.map((language) => language.code),
+    ...COMMON_PROJECT_LANGUAGE_CODES,
+  ]);
+  const defaultCode = getLanguageCode(locationCode);
+  const options = SERP_LANGUAGE_OPTIONS.filter((language) =>
+    codes.has(language.code),
+  );
+  return [
+    ...options.filter((language) => language.code === defaultCode),
+    ...options.filter((language) => language.code !== defaultCode),
+  ];
 }
 
 /**

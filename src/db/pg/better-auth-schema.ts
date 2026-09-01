@@ -24,6 +24,7 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   analyticsOptedOut: boolean("analytics_opted_out"),
+  disabled: boolean("disabled").default(false),
 });
 
 export const session = pgTable(

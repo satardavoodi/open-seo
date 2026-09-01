@@ -23,6 +23,7 @@ export const user = sqliteTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   analyticsOptedOut: integer("analytics_opted_out", { mode: "boolean" }),
+  disabled: integer("disabled", { mode: "boolean" }).default(false),
 });
 
 export const session = sqliteTable(

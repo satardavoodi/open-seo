@@ -8,6 +8,12 @@ export const userAdditionalFields = {
     required: false as const,
     input: true as const,
   },
+  disabled: {
+    type: "boolean" as const,
+    defaultValue: () => false,
+    required: false as const,
+    input: false as const,
+  },
 };
 
 export const baseAuthOptions = {

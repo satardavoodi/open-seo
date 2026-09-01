@@ -1,4 +1,5 @@
 import { AUTH_MODES } from "@/lib/auth-mode";
+import { isSelfHostedDeployment } from "@/lib/self-hosted-deployment";
 import {
   looksLikeDataForSeoKey,
   MIN_BETTER_AUTH_SECRET_LENGTH,
@@ -59,22 +60,61 @@ function checkAuthMode(env: EnvRecord, items: PreflightItem[]): void {
   }
 
   if (mode === "hosted") {
-    const missing = [
-      "BETTER_AUTH_URL",
-      "BETTER_AUTH_SECRET",
-      "GOOGLE_CLIENT_ID",
-      "GOOGLE_CLIENT_SECRET",
-    ].filter((name) => !get(env, name));
-    items.push(
-      missing.length
-        ? {
-            key: "auth",
-            name: "AUTH_MODE",
-            level: "fail",
-            message: `hosted mode requires ${missing.join(", ")}.`,
-          }
-        : { key: "auth", name: "AUTH_MODE", level: "ok", message: "hosted" },
+    const selfHosted = isSelfHostedDeployment(env);
+    const missing = ["BETTER_AUTH_URL", "BETTER_AUTH_SECRET"].filter(
+      (name) => !get(env, name),
     );
+
+    if (!selfHosted) {
+      missing.push("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET");
+    }
+
+    if (missing.length) {
+      items.push({
+        key: "auth",
+        name: "AUTH_MODE",
+        level: "fail",
+        message: `hosted mode requires ${missing.join(", ")}.`,
+      });
+      return;
+    }
+
+    const secret = get(env, "BETTER_AUTH_SECRET");
+    if (secret && secret.length < MIN_BETTER_AUTH_SECRET_LENGTH) {
+      items.push({
+        key: "auth",
+        name: "BETTER_AUTH_SECRET",
+        level: "fail",
+        message: `BETTER_AUTH_SECRET must be at least ${MIN_BETTER_AUTH_SECRET_LENGTH} characters.`,
+      });
+      return;
+    }
+
+    if (
+      selfHosted &&
+      get(env, "BYPASS_EMAIL_VERIFICATION") !== "true" &&
+      !["LOOPS_API_KEY", "LOOPS_TRANSACTIONAL_VERIFY_EMAIL_ID", "LOOPS_TRANSACTIONAL_RESET_PASSWORD_ID"].every(
+        (name) => get(env, name),
+      )
+    ) {
+      items.push({
+        key: "auth",
+        name: "AUTH_MODE",
+        level: "fail",
+        message:
+          "Docker hosted auth requires BYPASS_EMAIL_VERIFICATION=true (or full Loops email config). See docs/SELF_HOSTING_DOCKER.md.",
+      });
+      return;
+    }
+
+    items.push({
+      key: "auth",
+      name: "AUTH_MODE",
+      level: "ok",
+      message: selfHosted
+        ? "hosted (self-hosted Docker — email/password sign-in)"
+        : "hosted",
+    });
     return;
   }
 

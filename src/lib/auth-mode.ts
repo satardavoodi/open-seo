@@ -49,3 +49,13 @@ export function isEmailVerificationBypassed() {
   // bounce each other in an infinite redirect loop.
   return import.meta.env.BYPASS_EMAIL_VERIFICATION === "true";
 }
+
+export function isSelfHostedClientAuthMode() {
+  return (
+    isHostedClientAuthMode() && import.meta.env.VITE_SELF_HOSTED === "true"
+  );
+}
+
+export function isSaaSHostedClientAuthMode() {
+  return isHostedClientAuthMode() && !isSelfHostedClientAuthMode();
+}

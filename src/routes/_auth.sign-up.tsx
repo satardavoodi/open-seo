@@ -20,6 +20,7 @@ import {
   HOSTED_PASSWORD_MAX_LENGTH,
   HOSTED_PASSWORD_MIN_LENGTH,
 } from "@/lib/auth-options";
+import { isSelfHostedClientAuthMode } from "@/lib/auth-mode";
 import { z } from "zod";
 
 const signUpSchema = z
@@ -50,8 +51,45 @@ export const Route = createFileRoute("/_auth/sign-up")({
 
 function SignUpPage() {
   const search = Route.useSearch();
+  if (isSelfHostedClientAuthMode()) {
+    return <SelfHostedSignUpNotice redirectTo={search.redirect} />;
+  }
+  return <HostedSignUpPage redirect={search.redirect} />;
+}
+
+function SelfHostedSignUpNotice({ redirectTo }: { redirectTo?: string }) {
+  const { redirectTo: resolvedRedirect } = useAuthPageState(redirectTo);
+
+  return (
+    <AuthPageCard
+      title="Sign up disabled"
+      footer={
+        <p className="text-sm text-base-content/50">
+          Ask an admin to create your account, then{" "}
+          <Link
+            to="/sign-in"
+            search={getSignInSearch(resolvedRedirect)}
+            className="text-base-content underline underline-offset-2"
+          >
+            sign in
+          </Link>
+          . / ثبت‌نام عمومی غیرفعال است — از مدیر بخواهید حساب بسازد.
+        </p>
+      }
+    >
+      <p className="text-sm text-base-content/70">
+        Self-hosted OpenSEO uses admin-managed accounts. The first admin is
+        created from <code className="text-xs">ADMIN_EMAIL</code> and{" "}
+        <code className="text-xs">ADMIN_PASSWORD</code> in your Docker{" "}
+        <code className="text-xs">.env</code>.
+      </p>
+    </AuthPageCard>
+  );
+}
+
+function HostedSignUpPage({ redirect }: { redirect?: string }) {
   const navigate = useNavigate();
-  const { redirectTo, isHostedMode } = useAuthPageState(search.redirect);
+  const { redirectTo, isHostedMode } = useAuthPageState(redirect);
   const postSignupRedirect = redirectTo === "/" ? "/onboarding" : redirectTo;
   const [showEmailForm, setShowEmailForm] = useState(false);
   const google = useGoogleSignUp({ redirectTo, postSignupRedirect });

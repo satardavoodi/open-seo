@@ -12,6 +12,7 @@ import * as pgSchema from "@/db/pg/schema";
 import { getDatabaseProvider } from "@/db/provider";
 import { z } from "zod";
 import { isHostedAuthMode } from "@/lib/auth-mode";
+import { isSelfHostedHostedAuthMode } from "@/lib/self-hosted-deployment";
 import { createApiKeyPlugin } from "@/lib/auth-api-key";
 import { createBaseAuthConfig } from "@/lib/auth-config";
 import {
@@ -19,6 +20,7 @@ import {
   hasHostedTurnstileConfig,
 } from "@/lib/auth-turnstile";
 import { getOrCreateDefaultHostedOrganization } from "@/server/auth/default-hosted-organization";
+import { ensureSelfHostedWorkspaceMembership } from "@/server/auth/self-hosted-workspace";
 import {
   sendHostedPasswordResetEmail,
   sendHostedVerificationEmail,
@@ -34,7 +36,19 @@ const hostedBaseUrlSchema = z
       url.protocol === "https:" ||
       (url.protocol === "http:" && url.hostname === "localhost")
     );
-  }, "BETTER_AUTH_URL must use https or localhost");
+  },   "BETTER_AUTH_URL must use https or localhost");
+
+function workersEnvRecord(): Record<string, string | undefined> {
+  return env as unknown as Record<string, string | undefined>;
+}
+
+function isSelfHostedHostedAuth() {
+  return isSelfHostedHostedAuthMode(env.AUTH_MODE, workersEnvRecord());
+}
+
+type HostedOrganizationCreator = (
+  input: { name: string; slug: string; userId: string },
+) => Promise<{ id: string }>;
 
 function createAuth() {
   // Hosted needs the real configured URL (cookies, callbacks, /api/auth routes
@@ -64,16 +78,30 @@ function createAuth() {
           schema: d1Schema,
         });
 
+  let createHostedOrganization: HostedOrganizationCreator = async () => {
+    throw new Error("Hosted organization creator is not initialized");
+  };
+
   const auth = betterAuth({
     baseURL: baseUrl,
     secret: getHostedSecret(),
     ...baseAuthConfig,
     emailAndPassword: {
       ...baseAuthConfig.emailAndPassword,
+      disableSignUp: isSelfHostedHostedAuth()
+        ? true
+        : baseAuthConfig.emailAndPassword.disableSignUp,
       requireEmailVerification: !bypassEmail,
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url }) => {
+        if (bypassEmail || isSelfHostedHostedAuth()) {
+          console.info(
+            "Password reset email skipped (self-hosted or BYPASS_EMAIL_VERIFICATION).",
+            { email: user.email, url },
+          );
+          return;
+        }
         await sendHostedPasswordResetEmail({
           email: user.email,
           resetUrl: url,
@@ -118,6 +146,7 @@ function createAuth() {
           before: async (user) => {
             if (
               isHostedAuthMode(env.AUTH_MODE) &&
+              !isSelfHostedHostedAuth() &&
               isDisposableEmailDomain(user.email)
             ) {
               throw new APIError("BAD_REQUEST", {
@@ -127,19 +156,21 @@ function createAuth() {
             return { data: user };
           },
           after: async (user) => {
-            await syncHostedSignupContact(user);
+            if (!isSelfHostedHostedAuth()) {
+              await syncHostedSignupContact(user);
+            }
           },
         },
       },
       session: {
         create: {
           before: async (session) => {
-            // Inject Better Auth's createOrganization here so the helper can
-            // stay reusable without importing auth.ts and creating a cycle.
-            const organizationId = await getOrCreateDefaultHostedOrganization(
-              session.userId,
-              (body) => auth.api.createOrganization({ body }),
-            );
+            const organizationId = isSelfHostedHostedAuth()
+              ? await ensureSelfHostedWorkspaceMembership(session.userId)
+              : await getOrCreateDefaultHostedOrganization(
+                  session.userId,
+                  createHostedOrganization,
+                );
 
             return {
               data: {
@@ -152,6 +183,8 @@ function createAuth() {
       },
     },
   });
+
+  createHostedOrganization = (body) => auth.api.createOrganization({ body });
 
   return auth;
 }
@@ -221,13 +254,16 @@ function getHostedSecret() {
 }
 
 function getSocialProviders() {
-  // Google social login is hosted-only. Self-hosted builds the auth instance
-  // solely for Search Console token ops, which use the genericOAuth provider
-  // (createBaseAuthConfig) with its own creds — so it must NOT require the
-  // social-login config here, otherwise getAuth() construction would be coupled
-  // to GSC creds rather than just BETTER_AUTH_SECRET.
   if (!isHostedAuthMode(env.AUTH_MODE)) {
     return {};
+  }
+
+  if (isSelfHostedHostedAuth()) {
+    try {
+      return { google: getGoogleSocialProviderConfig() };
+    } catch {
+      return {};
+    }
   }
 
   return {
@@ -273,6 +309,14 @@ export function hasHostedAuthConfig() {
   try {
     getHostedBaseUrl();
     getHostedSecret();
+
+    if (isSelfHostedHostedAuth()) {
+      return (
+        Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true" ||
+        hasHostedAuthEmailConfig()
+      );
+    }
+
     getGoogleSocialProviderConfig();
     return (
       hasHostedTurnstileConfig(env) &&
