@@ -6,6 +6,7 @@ import {
   getIsoCountryCode,
   getKeywordDataProvider,
   getLanguageCode,
+  getLanguageOptions,
   isLabsLocationCode,
   isSupportedLanguageCode,
   isSupportedLocationCode,
@@ -59,6 +60,22 @@ describe("keyword locations", () => {
     expect(isSupportedLanguageCode("english")).toBe(false);
     expect(isSupportedLanguageCode("en-US")).toBe(false);
     expect(isSupportedLanguageCode("zh-tw")).toBe(false);
+  });
+
+  it("includes Iran with Persian default via Google Ads routing", () => {
+    const iran = LOCATION_OPTIONS.find((option) => option.label === "Iran");
+    expect(iran).toMatchObject({
+      code: 2364,
+      languageCode: "fa",
+      googleAdsOnly: true,
+    });
+    expect(getIsoCountryCode(2364)).toBe("ir");
+    expect(getKeywordDataProvider(2364)).toBe("google_ads");
+  });
+
+  it("offers Persian and English for Iran in the project picker", () => {
+    const codes = getLanguageOptions(2364).map((language) => language.code);
+    expect(new Set(codes)).toEqual(new Set(["fa", "en"]));
   });
 
   it("keeps the picker sorted alphabetically with unique codes", () => {

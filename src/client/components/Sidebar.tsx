@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Settings,
   User,
+  Users,
   X,
 } from "lucide-react";
 import {
@@ -20,7 +21,7 @@ import { SamSidebarPanel } from "@/client/features/sam/SamSidebarPanel";
 import { ThemePreferenceMenuItems } from "@/client/components/ThemePreferenceMenuItems";
 import { closeDropdown } from "@/client/lib/dropdown";
 import { signOutAndRedirect, useSession } from "@/lib/auth-client";
-import { isHostedClientAuthMode } from "@/lib/auth-mode";
+import { isHostedClientAuthMode, isSaaSHostedClientAuthMode, isSelfHostedClientAuthMode } from "@/lib/auth-mode";
 import { BILLING_ROUTE } from "@/shared/billing";
 
 interface SidebarProps {
@@ -266,7 +267,15 @@ function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
                 Settings
               </Link>
             </li>
-            {isHostedMode ? (
+            {isSelfHostedClientAuthMode() ? (
+              <li>
+                <Link to="/users" onClick={closeMenu}>
+                  <Users className="h-4 w-4" />
+                  Users / کاربران
+                </Link>
+              </li>
+            ) : null}
+            {isSaaSHostedClientAuthMode() ? (
               <li>
                 <Link to={BILLING_ROUTE} onClick={closeMenu}>
                   <CreditCard className="h-4 w-4" />

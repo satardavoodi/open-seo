@@ -72,6 +72,21 @@ describe("runSelfhostPreflight", () => {
     expect(itemFor(result, "Search Console")?.message).toContain("32");
   });
 
+  it("passes Docker hosted auth with email bypass", () => {
+    const result = runSelfhostPreflight({
+      AUTH_MODE: "hosted",
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true",
+      BETTER_AUTH_URL: "https://openseo.example.com",
+      BETTER_AUTH_SECRET: "x".repeat(40),
+      BYPASS_EMAIL_VERIFICATION: "true",
+    });
+
+    expect(result.failed).toBe(false);
+    expect(itemFor(result, "AUTH_MODE")?.message).toContain(
+      "hosted (self-hosted Docker",
+    );
+  });
+
   it("fails hosted mode listing every missing variable", () => {
     const result = runSelfhostPreflight({
       AUTH_MODE: "hosted",
@@ -83,6 +98,20 @@ describe("runSelfhostPreflight", () => {
     expect(item?.message).toContain("BETTER_AUTH_URL");
     expect(item?.message).toContain("GOOGLE_CLIENT_ID");
     expect(item?.message).not.toContain("BETTER_AUTH_SECRET,");
+  });
+
+  it("fails Docker hosted auth without email bypass or Loops", () => {
+    const result = runSelfhostPreflight({
+      AUTH_MODE: "hosted",
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true",
+      BETTER_AUTH_URL: "https://openseo.example.com",
+      BETTER_AUTH_SECRET: "x".repeat(40),
+    });
+
+    expect(result.failed).toBe(true);
+    expect(itemFor(result, "AUTH_MODE")?.message).toContain(
+      "BYPASS_EMAIL_VERIFICATION",
+    );
   });
 
   it("mentions ALLOWED_HOST when unset", () => {

@@ -2,7 +2,7 @@
 
 Run OpenSEO locally with Docker.
 
-In Docker mode, OpenSEO uses `AUTH_MODE=local_noauth` (no auth checks, local admin user `admin@localhost`). Only expose it behind your own auth-protected reverse proxy, tunnel, or private network.
+By default, Docker uses `AUTH_MODE=local_noauth` (no in-app auth, synthetic admin user `admin@localhost`). For a public VPS with real sign-in, use **`AUTH_MODE=hosted`** instead (see [Hosted auth on Docker](#hosted-auth-on-docker) below).
 
 The default `compose.yaml` uses the published GHCR image:
 
@@ -31,17 +31,45 @@ Optional env values:
 
 - `PORT` (defaults to `3001`)
 - `ALLOWED_HOST` (single reverse-proxy hostname to allow in Vite preview)
-- `AUTH_MODE=local_noauth` (already set in compose)
+- `AUTH_MODE` (defaults to `local_noauth`; set to `hosted` for email/password auth)
 - `OPEN_SEO_IMAGE` (defaults to `ghcr.io/every-app/open-seo:latest`)
 - `OPENROUTER_API_KEY` (required for AI features such as SAM; see [OpenRouter](https://openrouter.ai/settings/keys))
 
-If you are putting Docker behind a reverse proxy or a temporary tunnel, remember that Docker self-hosting runs with app auth disabled. Only expose it behind your own auth-protected reverse proxy, tunnel, or private network, and add the public hostname before restarting:
+If you are putting Docker behind a reverse proxy or a temporary tunnel with `local_noauth`, only expose it on a private network or add your own auth in front. With `AUTH_MODE=hosted`, OpenSEO handles sign-in itself.
 
 ```bash
 ALLOWED_HOST=yourdomain.com docker compose up -d
 ```
 
 You can also persist it in `.env`.
+
+## Hosted auth on Docker
+
+Use Better Auth email/password sign-in on a self-hosted Docker install (no Loops email required).
+
+Set these in `.env` (never commit real secrets):
+
+```bash
+AUTH_MODE=hosted
+BETTER_AUTH_URL=https://your-domain.example.com
+BETTER_AUTH_SECRET=replace-with-a-long-random-secret-at-least-32-characters
+BYPASS_EMAIL_VERIFICATION=true
+ALLOWED_HOST=your-domain.example.com
+ADMIN_EMAIL=admin@your-domain.example.com
+ADMIN_PASSWORD=choose-a-strong-password-at-least-8-characters
+```
+
+Then recreate the container:
+
+```bash
+docker compose up -d --force-recreate open-seo
+```
+
+On first start, the container bootstraps the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD` if that user does not exist yet. Sign in at `/sign-in`. Admins manage additional users under **Users / کاربران** in the account menu (create, disable, reset password). All users share one workspace; members see the same projects.
+
+Public self-registration is disabled — only admins create accounts. `cloudflare_access` and `local_noauth` remain available if you set `AUTH_MODE` accordingly.
+
+Google OAuth (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) is optional on Docker hosted auth and only needed for Google sign-in or Search Console integration.
 
 ## Telemetry
 
@@ -99,7 +127,7 @@ To confirm Docker Compose is using the expected environment variables:
 docker compose config
 ```
 
-Check that `AUTH_MODE=local_noauth`, and that `DATAFORSEO_API_KEY` is the base64
+Check that `AUTH_MODE` matches your intent (`local_noauth` by default, or `hosted` for email/password auth), and that `DATAFORSEO_API_KEY` is the base64
 encoded value of your DataForSEO email and API password in this format:
 `email:password`.
 

@@ -11,6 +11,7 @@ import { reconcileStaleAudits } from "@/server/features/audit/services/auditReco
 import { getOrCreateOrganizationCustomer } from "@/server/billing/subscription";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
+import { isSaaSHostedAuthMode } from "@/lib/self-hosted-deployment";
 import {
   createOpenSeoOAuthProvider,
   type OpenSeoOAuthEnv,
@@ -155,7 +156,9 @@ function handleFetch(
     return routeChatAgents(publicRequest, env);
   }
 
-  if (isHostedAuthMode(authMode)) {
+  if (
+    isSaaSHostedAuthMode(authMode, env as unknown as Record<string, string | undefined>)
+  ) {
     if (pathname === AUTUMN_WEBHOOK_PATH) {
       return handleAutumnWebhookRequest(publicRequest);
     }

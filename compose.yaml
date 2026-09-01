@@ -13,9 +13,15 @@ services:
     environment:
       # Required for local Docker self-hosting: exposes Compose env vars to cloudflare:workers bindings.
       - CLOUDFLARE_INCLUDE_PROCESS_ENV=true
+      - VITE_SELF_HOSTED=true
       - PORT=${PORT:-3001}
       - ALLOWED_HOST=${ALLOWED_HOST:-}
-      - AUTH_MODE=local_noauth
+      - AUTH_MODE=${AUTH_MODE:-local_noauth}
+      - BYPASS_EMAIL_VERIFICATION=${BYPASS_EMAIL_VERIFICATION:-}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - OPENSEO_TELEMETRY_DISABLED=${OPENSEO_TELEMETRY_DISABLED:-}
       - DO_NOT_TRACK=${DO_NOT_TRACK:-}
       - DATAFORSEO_API_KEY=${DATAFORSEO_API_KEY}
@@ -26,9 +32,7 @@ services:
       # docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-}
       # Optional: AI features (SAM, the in-app SEO agent)
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - OPENROUTER_MODEL=${OPENROUTER_MODEL:-}
       - VITE_SHOW_DEVTOOLS=false
     ports:

@@ -1,6 +1,9 @@
 import { getAuth, hasHostedAuthConfig } from "@/lib/auth";
 import { getActiveOrganizationId } from "@/lib/auth-session";
+import { isSelfHostedHostedAuthMode } from "@/lib/self-hosted-deployment";
+import { env } from "cloudflare:workers";
 import { getOrCreateDefaultHostedOrganization } from "@/server/auth/default-hosted-organization";
+import { UserAdminRepository } from "@/server/auth/repositories/UserAdminRepository";
 import { AppError } from "@/server/lib/errors";
 import type { EnsuredUserContext } from "./types";
 
@@ -16,6 +19,15 @@ async function requireHostedSession(headers: Headers) {
 
   if (!session?.user?.id || !session.user.email) {
     throw new AppError("UNAUTHENTICATED");
+  }
+
+  if (
+    isSelfHostedHostedAuthMode(env.AUTH_MODE, {
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: env.CLOUDFLARE_INCLUDE_PROCESS_ENV,
+    }) &&
+    (await UserAdminRepository.isUserDisabled(session.user.id))
+  ) {
+    throw new AppError("UNAUTHENTICATED", "Account disabled");
   }
 
   return session;

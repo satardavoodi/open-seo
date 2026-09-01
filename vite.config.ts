@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
       "POSTHOG_PUBLIC_KEY",
       "POSTHOG_HOST",
       "TURNSTILE_SITE_KEY",
+      "VITE_SELF_HOSTED",
     ],
     server: {
       allowedHosts,

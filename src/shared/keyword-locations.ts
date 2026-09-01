@@ -215,6 +215,7 @@ export const LOCATION_OPTIONS: readonly LocationOption[] = [
   },
   { code: 2356, label: "India", shortLabel: "IN", languageCode: "en" },
   { code: 2360, label: "Indonesia", shortLabel: "ID", languageCode: "id" },
+  { code: 2364, label: "Iran", shortLabel: "IR", languageCode: "fa", googleAdsOnly: true },
   {
     code: 2368,
     label: "Iraq",
@@ -574,7 +575,7 @@ export const SERP_LANGUAGE_OPTIONS = [
   { code: "et", label: "Estonian" },
   { code: "ee", label: "Ewe" },
   { code: "fo", label: "Faroese" },
-  { code: "fa", label: "Farsi" },
+  { code: "fa", label: "Persian (Farsi)" },
   { code: "fil", label: "Filipino" },
   { code: "fi", label: "Finnish" },
   { code: "fr", label: "French" },
@@ -792,6 +793,7 @@ const MULTI_LANGUAGE_LOCATIONS: Record<number, readonly string[]> = {
   2344: ["en", "zh-TW"], // Hong Kong
   2356: ["en", "hi"], // India
   2360: ["en", "id"], // Indonesia
+  2364: ["fa", "en"], // Iran
   2376: ["ar", "he"], // Israel
   2458: ["en", "ms"], // Malaysia
   2504: ["ar", "fr"], // Morocco

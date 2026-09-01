@@ -1,4 +1,5 @@
 import { isHostedAuthMode } from "@/lib/auth-mode";
+import { isSelfHostedDeployment } from "@/lib/self-hosted-deployment";
 
 let workersEnvPromise: Promise<Record<string, unknown> | null> | null = null;
 
@@ -37,8 +38,19 @@ export async function getRequiredEnvValue(name: string): Promise<string> {
   return value;
 }
 
+export async function isSaaSHostedServerAuthMode(): Promise<boolean> {
+  const authMode = await getOptionalEnvValue("AUTH_MODE");
+  if (!isHostedAuthMode(authMode)) {
+    return false;
+  }
+
+  const workersEnv = (await getWorkersEnv()) ?? {};
+  return !isSelfHostedDeployment(workersEnv as Record<string, string | undefined>);
+}
+
+/** True only on openseo.so-style hosted deployments (billing, Autumn, OAuth MCP). */
 export async function isHostedServerAuthMode(): Promise<boolean> {
-  return isHostedAuthMode(await getOptionalEnvValue("AUTH_MODE"));
+  return isSaaSHostedServerAuthMode();
 }
 
 async function getWorkersEnv(): Promise<Record<string, unknown> | null> {
