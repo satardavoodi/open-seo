@@ -16,8 +16,9 @@ function DataforseoApiKeyHelpPage() {
               Set up your DataForSEO API key
             </h1>
             <p className="text-sm text-base-content/70">
-              OpenSEO needs the <code>DATAFORSEO_API_KEY</code> secret before
-              keyword, domain, and SEO data workflows can run.
+              OpenSEO uses the <code>DATAFORSEO_API_KEY</code> secret for
+              keyword, domain, backlink, rank-tracking, and site-audit data.
+              Search Console and other Google integrations work without it.
             </p>
           </div>
         </div>

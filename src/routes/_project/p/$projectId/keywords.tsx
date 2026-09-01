@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { DataForSeoPageGate } from "@/client/features/dataforseo/DataForSeoPageGate";
 import { KeywordResearchPage } from "@/client/features/keywords/page/KeywordResearchPage";
 import {
   isResultLimit,
@@ -37,15 +38,17 @@ function KeywordResearchPageRoute() {
     order: sortDir = "desc",
   } = search;
   return (
-    <KeywordResearchPage
-      projectId={projectId}
-      keywordInput={keywordInput}
-      locationCode={locationCode}
-      resultLimit={isResultLimit(resultLimit) ? resultLimit : 150}
-      keywordMode={normalizeKeywordMode(keywordMode)}
-      clickstream={search.cs ?? false}
-      sortField={normalizeSortField(sortField)}
-      sortDir={normalizeSortDir(sortDir)}
-    />
+    <DataForSeoPageGate>
+      <KeywordResearchPage
+        projectId={projectId}
+        keywordInput={keywordInput}
+        locationCode={locationCode}
+        resultLimit={isResultLimit(resultLimit) ? resultLimit : 150}
+        keywordMode={normalizeKeywordMode(keywordMode)}
+        clickstream={search.cs ?? false}
+        sortField={normalizeSortField(sortField)}
+        sortDir={normalizeSortDir(sortDir)}
+      />
+    </DataForSeoPageGate>
   );
 }
